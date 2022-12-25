@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 
-import useCanvas from "../../hooks/useCanvas";
+import useCanvas from "../hooks/useCanvas";
 import sprite from "../../images/sprite.svg";
 import "./Captcha.css";
 
-export default function Captcha(setState) {
-    const [inputCaptcha, setInputCaptcha] = useState("");
+export default function Captcha({ formik, captcha, setCaptcha }) {
     const [ctx, setCtx] = useState();
     const [text, setText] = useState();
 
@@ -29,7 +29,10 @@ export default function Captcha(setState) {
     }
 
     function triggerFunction() {
-        setInputCaptcha("");
+        setCaptcha((prevState) => ({
+            ...prevState,
+            inputCaptcha: "",
+        }));
         let text = textGenerator();
         text = [...text].sort(() => Math.random() - 0.5).join("");
         setText(text);
@@ -53,14 +56,15 @@ export default function Captcha(setState) {
 
     function submitCaptcha(e) {
         e.preventDefault();
-        if (inputCaptcha === text) {
-            alert("Success");
-            setState((prevState) => ({
+        if (captcha.inputCaptcha === text) {
+            formik.values.captcha = true;
+            setCaptcha((prevState) => ({
                 ...prevState,
-                captcha: true,
+                isCaptcha: true,
             }));
+            toast.success("Success");
         } else {
-            alert("Incorrect");
+            toast.error("Incorrect");
             triggerFunction();
         }
     }
@@ -77,11 +81,19 @@ export default function Captcha(setState) {
             </div>
             <input
                 type="text"
-                id="user-input"
-                value={inputCaptcha}
-                onChange={(e) => setInputCaptcha(e.target.value)}
+                id="captcha"
+                name="captcha"
+                value={captcha.inputCaptcha}
+                onBlur={formik.handleBlur}
+                onChange={(e) =>
+                    setCaptcha((prevState) => ({
+                        ...prevState,
+                        inputCaptcha: e.target.value,
+                    }))
+                }
                 placeholder="Enter the text in the image*"
             />
+            {formik.touched.captcha && !captcha.isCaptcha ? <p>{formik.errors.captcha}</p> : null}
             <button id="submit-button" onClick={submitCaptcha}>
                 Submit
             </button>

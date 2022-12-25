@@ -3,6 +3,32 @@ form {
     padding: 10px;
 }
 
+p {
+    margin: 0;
+    color: red;
+}
+
+.tags {
+    position: absolute;
+    left: 650px;
+    top: 3px;
+}
+
+.tag {
+    padding: 0;
+    background-color: white;
+    color: black;
+}
+
+.tag:not(:last-child) {
+    margin-right: 10px;
+}
+
+.tag:hover,
+.tag:focus {
+    background-color: white;
+}
+
 label {
     display: flex;
     flex-direction: column;
@@ -11,6 +37,8 @@ label {
 
 textarea {
     padding: 8px;
+    width: 800px;
+    height: 100px;
 }
 
 input {
