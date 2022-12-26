@@ -1,14 +1,19 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 
+import useAutosizeTextArea from "../hooks/useAutosizeTextArea";
 import Captcha from "../Captcha";
 import "./Form.css";
 
 const TAGS = ["i", "strong", "code", "a"];
 
 export default function Form() {
+    const [value, setValue] = useState("");
     const [captcha, setCaptcha] = useState({ inputCaptcha: "", isCaptcha: false });
+    const textAreaRef = useRef(null);
+
+    useAutosizeTextArea(textAreaRef.current, value);
 
     const formik = useFormik({
         initialValues: {
@@ -26,7 +31,7 @@ export default function Form() {
             homePage: Yup.string().matches(/^((http|https|ftp):\/\/).+/, "URL format"),
             text: Yup.string()
                 .matches(
-                    /^([^<]*|((<code>.*<\/code>)*|(<i>[^<]*<\/i>)*|(<strong>[^<]*<\/strong>)*|([^<]*(<a href="[^"]*" title="[^"]*">[^<]*<\/a>)*)*)*)$/,
+                    /^([^<]|(<code>.*<\/code>)|(<i>[^<]*<\/i>)|(<strong>[^<]*<\/strong>)|(<a href="[^"]*" title="[^"]*">[^<]*<\/a>))+$/,
                     "You can only use the following HTML tags:  <a href=”” title=””> </a> <code> </code> <i> </i> <strong> </strong>"
                 )
                 .required("Required"),
@@ -43,8 +48,8 @@ export default function Form() {
         },
     });
 
-    function addTag(e) {
-        const tag = e.target.outerText.slice(1, -1);
+    function addTag({ target }) {
+        const tag = target.outerText.slice(1, -1);
         formik.setFieldValue(
             "text",
             formik.values.text +
@@ -52,8 +57,12 @@ export default function Form() {
         );
     }
 
+    const handleOnChange = ({ target }) => {
+        target.localName === "textarea" && setValue(target.defaultValue);
+    };
+
     return (
-        <form onSubmit={formik.handleSubmit}>
+        <form onSubmit={formik.handleSubmit} onChange={handleOnChange}>
             <div className="tags">
                 {TAGS.map((tag, index) => (
                     <button key={index} type="button" onClick={addTag} className="tag">
@@ -66,7 +75,7 @@ export default function Form() {
                 <textarea
                     type="text"
                     name="text"
-                    rows="5"
+                    ref={textAreaRef}
                     value={formik.values.text}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
