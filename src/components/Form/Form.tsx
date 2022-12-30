@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 
@@ -8,7 +8,7 @@ import "./Form.css";
 
 const TAGS = ["i", "strong", "code", "a"];
 
-export default function Form() {
+export default function Form(): JSX.Element {
     const [value, setValue] = useState("");
     const [captcha, setCaptcha] = useState({ inputCaptcha: "", isCaptcha: false });
     const textAreaRef = useRef(null);
@@ -42,14 +42,14 @@ export default function Form() {
             if (captcha.isCaptcha) {
                 console.log(38, values);
                 formik.resetForm();
-                setCaptcha({ inputCaptcha: "", isCaptcha: false });
+                // setCaptcha({ inputCaptcha: "", isCaptcha: false });
                 console.log(40, values);
             }
         },
     });
 
-    function addTag({ target }) {
-        const tag = target.outerText.slice(1, -1);
+    function addTag({ currentTarget }: React.MouseEvent<HTMLButtonElement, MouseEvent>): void {
+        const tag = currentTarget.textContent?.slice(1, -1);
         formik.setFieldValue(
             "text",
             formik.values.text +
@@ -57,7 +57,7 @@ export default function Form() {
         );
     }
 
-    const handleOnChange = ({ target }) => {
+    const handleOnChange = ({ target }: React.ChangeEvent<HTMLFormElement>): void => {
         target.localName === "textarea" && setValue(target.defaultValue);
     };
 
@@ -73,7 +73,6 @@ export default function Form() {
             <label>
                 Text*
                 <textarea
-                    type="text"
                     name="text"
                     ref={textAreaRef}
                     value={formik.values.text}

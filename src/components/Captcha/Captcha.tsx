@@ -1,22 +1,57 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, FocusEventHandler } from "react";
 import { toast } from "react-toastify";
+import { FormikTouched, FormikErrors } from "formik";
 
 import useCanvas from "../hooks/useCanvas";
 import sprite from "../../images/sprite.svg";
 import "./Captcha.css";
 
-export default function Captcha({ formik, captcha, setCaptcha }) {
-    const [ctx, setCtx] = useState();
-    const [text, setText] = useState();
+type Props = {
+    formik: {
+        initialValues: {
+            userName: string;
+            email: string;
+            homePage: string;
+            text: string;
+            captcha: string;
+        };
+        values: any;
+        touched: FormikTouched<{ [captcha: string]: any }>;
+        errors: FormikErrors<{ [captcha: string]: string[] }>;
+        handleBlur: FocusEventHandler<HTMLInputElement> | undefined;
+    };
+    captcha: {
+        inputCaptcha: string;
+        isCaptcha: boolean;
+    };
+    setCaptcha: React.Dispatch<
+        React.SetStateAction<{
+            inputCaptcha: string;
+            isCaptcha: boolean;
+        }>
+    >;
+};
+
+export default function Captcha({ formik, captcha, setCaptcha }: Props): JSX.Element {
+    const [ctx, setCtx] = useState<any>();
+    const [text, setText] = useState("");
+    const [showRequired, setShowRequired] = useState(false);
 
     useEffect(() => {
         triggerFunction();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [ctx]);
 
-    function randomNumber(min, max) {
+    function randomNumber(min: number, max: number) {
         return Math.floor(Math.random() * (max - min + 1) + min);
     }
+
+    useEffect(() => {
+        formik.touched.captcha &&
+            setTimeout(() => {
+                setShowRequired(true);
+            }, 100);
+    }, [formik.touched.captcha]);
 
     function textGenerator() {
         let generatedText = "";
@@ -49,20 +84,20 @@ export default function Captcha({ formik, captcha, setCaptcha }) {
         }
     }
 
-    const canvasRef = useCanvas(([_canvas, ctx]) => {
+    const canvasRef = useCanvas(([_canvas, ctx]: any) => {
         setCtx(ctx);
         triggerFunction();
     });
 
-    function submitCaptcha(e) {
+    function submitCaptcha(e: { preventDefault: () => void }) {
         e.preventDefault();
         if (captcha.inputCaptcha === text) {
-            formik.values.captcha = true;
+            toast.success("Success");
+            formik.values.captcha = text;
             setCaptcha((prevState) => ({
                 ...prevState,
                 isCaptcha: true,
             }));
-            toast.success("Success");
         } else {
             toast.error("Incorrect");
             triggerFunction();
@@ -73,7 +108,7 @@ export default function Captcha({ formik, captcha, setCaptcha }) {
         <div className="container">
             <div className="wrapper">
                 <canvas id="canvas" ref={canvasRef} width="200" height="50"></canvas>
-                <button id="reload-button" onClick={triggerFunction}>
+                <button id="reload-button" onClick={triggerFunction} type="button">
                     <svg width="25" height="25">
                         <use href={sprite + "#rotate-right"}></use>
                     </svg>
@@ -93,8 +128,8 @@ export default function Captcha({ formik, captcha, setCaptcha }) {
                 }
                 placeholder="Enter the text in the image*"
             />
-            {formik.touched.captcha && !captcha.isCaptcha ? <p>{formik.errors.captcha}</p> : null}
-            <button id="submit-button" onClick={submitCaptcha}>
+            {showRequired && !captcha.isCaptcha ? <p>{formik.errors.captcha}</p> : null}
+            <button type="button" id="submit-button" onClick={submitCaptcha}>
                 Submit
             </button>
         </div>
